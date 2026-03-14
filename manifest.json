@@ -2,8 +2,8 @@
   "name": "AXION / ON - Logística App",
   "short_name": "Ruta Logística",
   "description": "Aplicación oficial de auditoría logística y telemetría para vendedores en campo.",
-  "start_url": "/app-logistica/index.html",
-  "display": "standalone",
+  "start_url": "./index.html",
+  "display": "fullscreen",
   "background_color": "#1A1A1A",
   "theme_color": "#E6007E",
   "icons": [

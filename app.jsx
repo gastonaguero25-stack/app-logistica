@@ -229,12 +229,13 @@ function App() {
 
     if (screen === "setup") return (
         <div style={C.app}>
-            <div style={{ padding: "40px 24px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
-                <div style={{ textAlign: "center", marginBottom: 10, display: "flex", justifyContent: "center" }}>
-                    <div style={{ position: "relative", display: "inline-block" }}>
-                        <img src="./logo.png" alt="Logo Logística" style={{ width: 140, height: 140, objectFit: "contain", borderRadius: 28, boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }} />
-                        <span style={{ position: "absolute", bottom: -8, right: -12, fontSize: 13, background: COLORS.magenta, color: "#fff", padding: "4px 8px", borderRadius: 4, letterSpacing: 1, fontWeight: "bold" }}>v2.1</span>
-                    </div>
+            {/* Versión en la esquina inferior izquierda */}
+            <div style={{ position: "fixed", bottom: 16, left: 16, fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: "bold" }}>v{APP_VERSION}</div>
+
+            <div style={{ padding: "60px 24px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
+                <div style={{ textAlign: "center", marginBottom: 10, display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <img src="./logo.png" alt="Comercial Logística" style={{ width: 120, height: 120, objectFit: "contain", borderRadius: 24, boxShadow: "0 10px 30px rgba(0,0,0,0.5)", marginBottom: 16 }} />
+                    <div style={{ fontSize: 24, fontWeight: 900, color: COLORS.textWhite, letterSpacing: 0.5 }}>Comercial Logística</div>
                 </div>
 
                 <div style={C.card()}>
