@@ -8,6 +8,7 @@ const urlsToCache = [
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting(); // Obliga al SW a tomar control inmediatamente, expulsando al viejo
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
