@@ -5,9 +5,7 @@ const { useState, useEffect } = React;
 const BASES_DISPONIBLES = [
     { id: "ruta", name: "LA RUTA S.A.", address: "Ruta Nac. 12 Km 1027,5", lat: -27.5052648, lng: -58.7741652, color: "#FFF", province: "Corrientes" },
     { id: "jisacentro", name: "JISA S.A. (CENTRO)", address: "25 de Mayo, Resistencia, Chaco", lat: -27.4514, lng: -58.9866, color: "#FFF", province: "Chaco" },
-    { id: "jisahiper", name: "JISA S.A. (HIPER)", address: "Hiper Libertad, Resistencia, Chaco", lat: -27.4331, lng: -58.9954, color: "#FFF", province: "Chaco" },
-    { id: "sanlorenzo", name: "Lubricantes San Lorenzo", address: "Campana, Santa Fe", lat: -32.7333, lng: -60.7333, color: "#21c354", province: "Proveedor" },
-    { id: "yfp_proveedor", name: "YPF Agro Distribución", address: "Santa Fe", lat: -31.6333, lng: -60.7000, color: "#21c354", province: "Proveedor" }
+    { id: "jisahiper", name: "JISA S.A. (HIPER)", address: "Hiper Libertad, Resistencia, Chaco", lat: -27.4331, lng: -58.9954, color: "#FFF", province: "Chaco" }
 ];
 
 const GAS_STATIONS = [
@@ -28,7 +26,7 @@ const RESULTS = [
 // --- API y Constantes ---
 // Forzamos la IP del entorno Servidor (MAC) para que la app (allojada en Github) sepa enviar sus datos a la casa matriz
 const API_URL = "http://192.168.1.14:8000";
-const APP_VERSION = "2.3.1";
+const APP_VERSION = "2.3.2";
 
 // --- Utilidades ---
 const geodist = (lat1, lng1, lat2, lng2) => {
@@ -280,66 +278,114 @@ function App() {
 
                 <button style={C.btn("transparent", COLORS.textWhite, { marginTop: 24, border: "1px solid rgba(255,255,255,0.2)" })}
                     onClick={() => setScreen("setup")}>
-                    🔙 Volver o Cambiar Perfil
+                    🔙 Volver
                 </button>
             </div>
         </div>
     );
 
+    const MapModal = () => {
+        const [sidebarOpen, setSidebarOpen] = useState(true);
+
+        useEffect(() => {
+            // Auto minimize sidebar after 2.5 seconds showing the map
+            const timer = setTimeout(() => {
+                setSidebarOpen(false);
+            }, 2500);
+            return () => clearTimeout(timer);
+        }, []);
+
+        return (
+            <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", flexDirection: "column", padding: "safe-area-inset" }}>
+                <div style={{ background: COLORS.navy, padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `2px solid ${COLORS.magenta}` }}>
+                    <div style={{ color: "#FFF", fontWeight: 700, fontSize: 16 }}>📍 Ubicación y Ruta</div>
+                    <button style={{ background: "transparent", border: "none", color: "#ff4b4b", fontSize: 24, cursor: "pointer", fontWeight: 900 }} onClick={() => setMapUrl(null)}>×</button>
+                </div>
+
+                <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden", position: "relative" }}>
+
+                    {/* BARRA LATERAL PARA SELECCIÓN PREDETERMINADA */}
+                    <div style={{
+                        width: sidebarOpen ? 160 : 0,
+                        background: COLORS.bgDark,
+                        borderRight: sidebarOpen ? `1px solid rgba(255,255,255,0.1)` : 'none',
+                        overflowY: "auto",
+                        padding: sidebarOpen ? "10px" : "0",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 8,
+                        transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+                        opacity: sidebarOpen ? 1 : 0
+                    }}>
+                        <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginBottom: 4, letterSpacing: 0.5 }}>P. PARTIDA:</div>
+                        {BASES_DISPONIBLES.filter(b => b.province !== "Proveedor").map(b => (
+                            <div key={b.id} style={{ fontSize: 11, color: b.color || "#FFF", fontWeight: 600, padding: "4px 0", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.05)" }} onClick={() => setCurrentBase(b)}>
+                                {b.id === currentBase.id ? "📍 " : ""}{b.name.replace("AXION ", "")}
+                            </div>
+                        ))}
+
+                        <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>DEST. CORRIENTES:</div>
+                        {GAS_STATIONS.filter(g => g.province === "Corrientes").map((g, idx) => (
+                            <div key={idx} style={{ background: "rgba(255,255,255,0.05)", padding: "10px 8px", borderRadius: 8, cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)", transition: "0.2s" }}
+                                onClick={() => openMapsRoute(currentBase.lat, currentBase.lng, g.lat, g.lng, setMapUrl)}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: "#FFF", marginBottom: 2 }}>{g.name.slice(0, 16)}{g.name.length > 16 ? "..." : ""}</div>
+                                <div style={{ fontSize: 10, color: COLORS.magenta, fontWeight: 700 }}>{geodist(currentBase.lat, currentBase.lng, g.lat, g.lng).toFixed(1)} km</div>
+                            </div>
+                        ))}
+
+                        <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>DEST. CHACO:</div>
+                        {GAS_STATIONS.filter(g => g.province === "Chaco").map((g, idx) => (
+                            <div key={idx} style={{ background: "rgba(255,255,255,0.05)", padding: "10px 8px", borderRadius: 8, cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)", transition: "0.2s" }}
+                                onClick={() => openMapsRoute(currentBase.lat, currentBase.lng, g.lat, g.lng, setMapUrl)}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: "#FFF", marginBottom: 2 }}>{g.name.slice(0, 16)}{g.name.length > 16 ? "..." : ""}</div>
+                                <div style={{ fontSize: 10, color: COLORS.magenta, fontWeight: 700 }}>{geodist(currentBase.lat, currentBase.lng, g.lat, g.lng).toFixed(1)} km</div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* TOGGLE BUTTON */}
+                    <button
+                        onClick={() => setSidebarOpen(!sidebarOpen)}
+                        style={{
+                            position: "absolute",
+                            left: sidebarOpen ? 160 : 0,
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            background: COLORS.navy,
+                            border: `1px solid ${COLORS.magenta}`,
+                            borderLeft: "none",
+                            color: COLORS.magenta,
+                            width: 24,
+                            height: 48,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            zIndex: 10,
+                            borderTopRightRadius: 8,
+                            borderBottomRightRadius: 8,
+                            transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+                            boxShadow: "4px 0 10px rgba(0,0,0,0.5)",
+                            fontSize: 10,
+                            fontWeight: "bold"
+                        }}>
+                        {sidebarOpen ? '◀' : '▶'}
+                    </button>
+
+                    {/* FRAME DEL MAPA */}
+                    <div style={{ flex: 1, background: "#000", position: "relative" }}>
+                        <iframe width="100%" height="100%" frameBorder="0" style={{ border: 0 }} src={mapUrl} allowFullScreen></iframe>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     // ── MAIN ───────────────────────────────────────────────────────────────────
     return (
         <div style={C.app}>
             {/* Modal de Mapa Integrado Side-Bar Layout */}
-            {mapUrl && (
-                <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 1000, display: "flex", flexDirection: "column", padding: "safe-area-inset" }}>
-                    <div style={{ background: COLORS.navy, padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `2px solid ${COLORS.magenta}` }}>
-                        <div style={{ color: "#FFF", fontWeight: 700, fontSize: 16 }}>📍 Ubicación y Ruta</div>
-                        <button style={{ background: "transparent", border: "none", color: "#ff4b4b", fontSize: 24, cursor: "pointer", fontWeight: 900 }} onClick={() => setMapUrl(null)}>×</button>
-                    </div>
-
-                    <div style={{ flex: 1, display: "flex", flexDirection: "row", overflow: "hidden" }}>
-                        {/* BARRA LATERAL PARA SELECCIÓN PREDETERMINADA */}
-                        <div style={{ width: 140, background: COLORS.bgDark, borderRight: `1px solid rgba(255,255,255,0.1)`, overflowY: "auto", padding: 10, display: "flex", flexDirection: "column", gap: 8 }}>
-                            <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginBottom: 4, letterSpacing: 0.5 }}>P. PARTIDA:</div>
-                            {BASES_DISPONIBLES.filter(b => b.province !== "Proveedor").map(b => (
-                                <div key={b.id} style={{ fontSize: 11, color: b.color || "#FFF", fontWeight: 600, padding: "4px 0", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.05)" }} onClick={() => setCurrentBase(b)}>
-                                    {b.id === currentBase.id ? "📍 " : ""}{b.name.replace("AXION ", "")}
-                                </div>
-                            ))}
-
-                            <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>PROVEEDOR:</div>
-                            {BASES_DISPONIBLES.filter(b => b.province === "Proveedor").map(b => (
-                                <div key={b.id} style={{ fontSize: 11, color: b.color || "#FFF", fontWeight: 600, padding: "4px 0", cursor: "pointer", borderBottom: "1px solid rgba(255,255,255,0.05)" }} onClick={() => setCurrentBase(b)}>
-                                    {b.id === currentBase.id ? "📦 " : ""}{b.name.replace("AXION ", "").replace("Lubricantes ", "Lub. ")}
-                                </div>
-                            ))}
-
-                            <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>DEST. CORRIENTES:</div>
-                            {GAS_STATIONS.filter(g => g.province === "Corrientes").map((g, idx) => (
-                                <div key={idx} style={{ background: "rgba(255,255,255,0.05)", padding: "10px 8px", borderRadius: 8, cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)", transition: "0.2s" }}
-                                    onClick={() => openMapsRoute(currentBase.lat, currentBase.lng, g.lat, g.lng, setMapUrl)}>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: "#FFF", marginBottom: 2 }}>{g.name.slice(0, 16)}{g.name.length > 16 ? "..." : ""}</div>
-                                    <div style={{ fontSize: 10, color: COLORS.magenta, fontWeight: 700 }}>{geodist(currentBase.lat, currentBase.lng, g.lat, g.lng).toFixed(1)} km</div>
-                                </div>
-                            ))}
-
-                            <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>DEST. CHACO:</div>
-                            {GAS_STATIONS.filter(g => g.province === "Chaco").map((g, idx) => (
-                                <div key={idx} style={{ background: "rgba(255,255,255,0.05)", padding: "10px 8px", borderRadius: 8, cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)", transition: "0.2s" }}
-                                    onClick={() => openMapsRoute(currentBase.lat, currentBase.lng, g.lat, g.lng, setMapUrl)}>
-                                    <div style={{ fontSize: 12, fontWeight: 700, color: "#FFF", marginBottom: 2 }}>{g.name.slice(0, 16)}{g.name.length > 16 ? "..." : ""}</div>
-                                    <div style={{ fontSize: 10, color: COLORS.magenta, fontWeight: 700 }}>{geodist(currentBase.lat, currentBase.lng, g.lat, g.lng).toFixed(1)} km</div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* FRAME DEL MAPA */}
-                        <div style={{ flex: 1, background: "#000" }}>
-                            <iframe width="100%" height="100%" frameBorder="0" style={{ border: 0 }} src={mapUrl} allowFullScreen></iframe>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {mapUrl && <MapModal />}
 
 
             {/* Sync Floating Button */}
@@ -377,9 +423,9 @@ function App() {
                         <div style={{ fontSize: 10, color: COLORS.magenta, textTransform: "uppercase", letterSpacing: 1, marginTop: 1, fontWeight: 700 }}>{currentBase.name}</div>
                     </div>
                 </div>
-                <div style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "6px 10px", borderRadius: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
+                <div style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", fontSize: 12, fontWeight: 700, padding: "8px 12px", borderRadius: 12, cursor: "pointer", display: "flex", alignItems: "center" }}
                     onClick={() => { setScreen("setup"); setVendorName(""); setNameInput(""); }}>
-                    <span>🔄</span> {vendorName}
+                    {vendorName}
                 </div>
             </div>
 
