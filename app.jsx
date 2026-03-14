@@ -3,7 +3,7 @@ const { useState, useEffect } = React;
 
 // --- Configuración de Bases Disponibles --- 
 const BASES_DISPONIBLES = [
-    { id: "ruta", name: "AXION La Ruta", address: "Ruta Nac. 12 Km 1027,5", lat: -27.5052648, lng: -58.7741652, color: "#FFF", province: "Corrientes" },
+    { id: "ruta", name: "JISA S.A. | LA RUTA S.A.", address: "Ruta Nac. 12 Km 1027,5", lat: -27.5052648, lng: -58.7741652, color: "#FFF", province: "Corrientes" },
     { id: "jisacentro", name: "AXION Jisa Centro", address: "25 de Mayo, Resistencia, Chaco", lat: -27.4514, lng: -58.9866, color: "#FFF", province: "Chaco" },
     { id: "jisahiper", name: "AXION Jisa Hiper", address: "Hiper Libertad, Resistencia, Chaco", lat: -27.4331, lng: -58.9954, color: "#FFF", province: "Chaco" },
     { id: "sanlorenzo", name: "Lubricantes San Lorenzo", address: "Campana, Santa Fe", lat: -32.7333, lng: -60.7333, color: "#21c354", province: "Proveedor" },
@@ -28,7 +28,7 @@ const RESULTS = [
 // --- API y Constantes ---
 // Forzamos la IP del entorno Servidor (MAC) para que la app (allojada en Github) sepa enviar sus datos a la casa matriz
 const API_URL = "http://192.168.1.14:8000";
-const APP_VERSION = "2.3.0";
+const APP_VERSION = "2.4.0";
 
 // --- Utilidades ---
 const geodist = (lat1, lng1, lat2, lng2) => {
@@ -373,7 +373,7 @@ function App() {
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <img src="./logo.png" alt="Logo Logística" style={{ width: 36, height: 36, borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.5)" }} />
                     <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                        <div style={{ fontSize: 13, fontWeight: 800, color: "#FFF", letterSpacing: 0.5 }}>Ruta Logística</div>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: "#FFF", letterSpacing: 0.5 }}>Comercial Logística</div>
                         <div style={{ fontSize: 10, color: COLORS.magenta, textTransform: "uppercase", letterSpacing: 1, marginTop: 1, fontWeight: 700 }}>{currentBase.name}</div>
                     </div>
                 </div>
