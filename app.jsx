@@ -3,9 +3,9 @@ const { useState, useEffect } = React;
 
 // --- Configuración de Bases Disponibles --- 
 const BASES_DISPONIBLES = [
-    { id: "ruta", name: "JISA S.A. | LA RUTA S.A.", address: "Ruta Nac. 12 Km 1027,5", lat: -27.5052648, lng: -58.7741652, color: "#FFF", province: "Corrientes" },
-    { id: "jisacentro", name: "AXION Jisa Centro", address: "25 de Mayo, Resistencia, Chaco", lat: -27.4514, lng: -58.9866, color: "#FFF", province: "Chaco" },
-    { id: "jisahiper", name: "AXION Jisa Hiper", address: "Hiper Libertad, Resistencia, Chaco", lat: -27.4331, lng: -58.9954, color: "#FFF", province: "Chaco" },
+    { id: "ruta", name: "LA RUTA S.A.", address: "Ruta Nac. 12 Km 1027,5", lat: -27.5052648, lng: -58.7741652, color: "#FFF", province: "Corrientes" },
+    { id: "jisacentro", name: "JISA S.A. (CENTRO)", address: "25 de Mayo, Resistencia, Chaco", lat: -27.4514, lng: -58.9866, color: "#FFF", province: "Chaco" },
+    { id: "jisahiper", name: "JISA S.A. (HIPER)", address: "Hiper Libertad, Resistencia, Chaco", lat: -27.4331, lng: -58.9954, color: "#FFF", province: "Chaco" },
     { id: "sanlorenzo", name: "Lubricantes San Lorenzo", address: "Campana, Santa Fe", lat: -32.7333, lng: -60.7333, color: "#21c354", province: "Proveedor" },
     { id: "yfp_proveedor", name: "YPF Agro Distribución", address: "Santa Fe", lat: -31.6333, lng: -60.7000, color: "#21c354", province: "Proveedor" }
 ];
@@ -28,7 +28,7 @@ const RESULTS = [
 // --- API y Constantes ---
 // Forzamos la IP del entorno Servidor (MAC) para que la app (allojada en Github) sepa enviar sus datos a la casa matriz
 const API_URL = "http://192.168.1.14:8000";
-const APP_VERSION = "2.4.0";
+const APP_VERSION = "2.3.1";
 
 // --- Utilidades ---
 const geodist = (lat1, lng1, lat2, lng2) => {
