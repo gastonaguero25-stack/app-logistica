@@ -2,50 +2,93 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AXION / ON - Movilidad Logística</title>
-    <link rel="manifest" href="./manifest.json">
-    <link rel="apple-touch-icon" href="./icon-192.png">
-    <meta name="theme-color" content="#E6007E">
-    <!-- Registro del Service Worker para PWA -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('SW registrado', reg))
-            .catch(err => console.log('SW fallo', err));
-        });
-      }
-    </script>
-    <!-- CSS para reset básico -->
-    <style>
-        body,
-        html {
-            margin: 0;
-            padding: 0;
-            background-color: #1A1A1A;
-            /* AXION/ON Fondo Oscuro */
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <!-- Oculta totalmente la UI del navegador (barras de búsqueda/direcciones) -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Ruta Logística - Vendedor</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <meta name="theme-color" content="#E6007E">
+  <!-- Registro del Service Worker para PWA (Versionado) -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js?v=2.2')
+          .then(reg => {
+            reg.onupdatefound = () => {
+              const installingWorker = reg.installing;
+              installingWorker.onstatechange = () => {
+                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Forzar recarga automática si hay una actualización detectada en 2do plano
+                  window.location.reload();
+                }
+              };
+            };
+          }).catch(err => console.log('SW fallo', err));
+      });
+    }
+  </script>
+  <!-- CSS para reset básico -->
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      background-color: #1A1A1A;
+      /* AXION/ON Fondo Oscuro */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        #root {
-            width: 100%;
-            height: 100%;
-        }
-    </style>
-    <!-- React y ReactDOM -->
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel para compilar JSX en vivo para desarrollo rápido -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    #root {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <!-- React y ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel para compilar JSX en vivo para desarrollo rápido -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 
 <body>
-    <div id="root"></div>
-    <!-- Carga del archivo JSX -->
-    <script type="text/babel" src="./app.jsx"></script>
+  <div id="root">
+    <div
+      style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background-color:#1A1A1A;">
+      <img src="./logo.png" alt="Iniciando"
+        style="width:120px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: pulse 2s infinite;">
+      <div
+        style="color: #A3ACB8; margin-top: 20px; font-family: sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 1px;">
+        CARGANDO...</div>
+    </div>
+    <style>
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        50% {
+          transform: scale(1.05);
+          opacity: 0.8;
+        }
+
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+    </style>
+  </div>
+  <!-- Carga del archivo JSX, cache-busting automático -->
+  <script>
+    document.write('<script type="text/babel" src="./app.jsx?v=' + new Date().getTime() + '"><\/script>');
+  </script>
 </body>
 
 </html>

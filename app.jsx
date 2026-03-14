@@ -3,11 +3,11 @@ const { useState, useEffect } = React;
 
 // --- Configuración de Bases Disponibles --- 
 const BASES_DISPONIBLES = [
-  { id: "ruta", name: "AXION La Ruta", address: "Ruta Nac. 12 Km 1027,5", lat: -27.5052648, lng: -58.7741652, color: "#FFF", province: "Corrientes" },
-  { id: "jisacentro", name: "AXION Jisa Centro", address: "25 de Mayo, Resistencia, Chaco", lat: -27.4514, lng: -58.9866, color: "#FFF", province: "Chaco" },
-  { id: "jisahiper", name: "AXION Jisa Hiper", address: "Hiper Libertad, Resistencia, Chaco", lat: -27.4331, lng: -58.9954, color: "#FFF", province: "Chaco" },
-  { id: "sanlorenzo", name: "Lubricantes San Lorenzo", address: "Campana, Santa Fe", lat: -32.7333, lng: -60.7333, color: "#21c354", province: "Proveedor" },
-  { id: "yfp_proveedor", name: "YPF Agro Distribución", address: "Santa Fe", lat: -31.6333, lng: -60.7000, color: "#21c354", province: "Proveedor" }
+    { id: "ruta", name: "AXION La Ruta", address: "Ruta Nac. 12 Km 1027,5", lat: -27.5052648, lng: -58.7741652, color: "#FFF", province: "Corrientes" },
+    { id: "jisacentro", name: "AXION Jisa Centro", address: "25 de Mayo, Resistencia, Chaco", lat: -27.4514, lng: -58.9866, color: "#FFF", province: "Chaco" },
+    { id: "jisahiper", name: "AXION Jisa Hiper", address: "Hiper Libertad, Resistencia, Chaco", lat: -27.4331, lng: -58.9954, color: "#FFF", province: "Chaco" },
+    { id: "sanlorenzo", name: "Lubricantes San Lorenzo", address: "Campana, Santa Fe", lat: -32.7333, lng: -60.7333, color: "#21c354", province: "Proveedor" },
+    { id: "yfp_proveedor", name: "YPF Agro Distribución", address: "Santa Fe", lat: -31.6333, lng: -60.7000, color: "#21c354", province: "Proveedor" }
 ];
 
 const GAS_STATIONS = [
@@ -26,8 +26,9 @@ const RESULTS = [
 ];
 
 // --- API y Constantes ---
-const API_URL = "http://localhost:8000"; // Cambiar por la IP del servidor en red local o la PWA
-const APP_VERSION = "1.0.0";
+// Forzamos la IP del entorno Servidor (MAC) para que la app (allojada en Github) sepa enviar sus datos a la casa matriz
+const API_URL = "http://192.168.1.14:8000";
+const APP_VERSION = "2.3.0";
 
 // --- Utilidades ---
 const geodist = (lat1, lng1, lat2, lng2) => {
@@ -39,7 +40,7 @@ const geodist = (lat1, lng1, lat2, lng2) => {
 const fmtTime = (m) => {
     if (!m || m <= 0) return "—";
     const h = Math.floor(m / 60), min = m % 60;
-    return h > 0 ? `${ h }h ${ min } m` : `${ min } m`;
+    return h > 0 ? `${h}h ${min} m` : `${min} m`;
 };
 
 const calcMins = (a, b) => {
@@ -157,14 +158,14 @@ function App() {
     };
 
     // ── SETUP ──────────────────────────────────────────────────────────────────
-    
+
     // --- Cloud y Sincronizacion ---
     const checkUpdate = async () => {
         try {
             const res = await fetch(`${API_URL}/api/ota/check-update?current_version=${APP_VERSION}`);
             const data = await res.json();
             if (data.actualizacion_disponible && data.requerida) {
-                alert("Actualización Obligatoria. Descargando nueva versión...");
+                alert(data.mensaje || "Actualización Obligatoria. Aplicando cambios...");
                 window.location.href = data.url_descarga;
             }
         } catch (e) {
@@ -202,7 +203,7 @@ function App() {
         const avg = visited.length ? Math.round(totalMins / visited.length) : 0;
         const speedDesc = avg > 30 ? "Ventas Consultivas (Largas)" : "Transactional Speed (Rápidas)";
         const performance = convRate > 50 ? "Alta retención de clientes" : "Fricción en cierre";
-        
+
         const reporte = {
             "Nombre Empleado": vendorName || "Usuario",
             "perfil_usuario": { promedio_minutos: avg, tasa_cierre: convRate },
@@ -217,7 +218,7 @@ function App() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(reporte)
             });
-        } catch(e) { console.log(e); }
+        } catch (e) { console.log(e); }
     };
 
     useEffect(() => {
@@ -230,9 +231,9 @@ function App() {
         <div style={C.app}>
             <div style={{ padding: "40px 24px 20px", display: "flex", flexDirection: "column", gap: 20 }}>
                 <div style={{ textAlign: "center", marginBottom: 10, display: "flex", justifyContent: "center" }}>
-                    <div style={{ fontSize: 48, fontWeight: 900, color: "transparent", WebkitTextStroke: `2px ${COLORS.magenta}`, position: "relative", display: "inline-block" }}>
-                        R
-                        <span style={{ position: "absolute", bottom: -5, left: -20, fontSize: 13, background: COLORS.magenta, color: "#fff", padding: "4px 8px", borderRadius: 4, letterSpacing: 1, WebkitTextStroke: "0" }}>v2.1</span>
+                    <div style={{ position: "relative", display: "inline-block" }}>
+                        <img src="./logo.png" alt="Logo Logística" style={{ width: 140, height: 140, objectFit: "contain", borderRadius: 28, boxShadow: "0 10px 30px rgba(0,0,0,0.5)" }} />
+                        <span style={{ position: "absolute", bottom: -8, right: -12, fontSize: 13, background: COLORS.magenta, color: "#fff", padding: "4px 8px", borderRadius: 4, letterSpacing: 1, fontWeight: "bold" }}>v2.1</span>
                     </div>
                 </div>
 
@@ -339,7 +340,7 @@ function App() {
                 </div>
             )}
 
-            
+
             {/* Sync Floating Button */}
             {tab === "clientes" && (
                 <div style={{ position: "fixed", bottom: 80, right: 16, zIndex: 900 }}>
@@ -368,9 +369,12 @@ function App() {
 
             {/* Header Sticky AXION */}
             <div style={{ background: "rgba(15, 27, 64, 0.95)", borderBottom: `2px solid ${COLORS.magenta}`, padding: "14px 18px", position: "sticky", top: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "space-between", backdropFilter: "blur(10px)" }}>
-                <div>
-                    <div style={{ fontSize: 20, fontWeight: 900, color: "transparent", WebkitTextStroke: `1px ${COLORS.magenta}`, letterSpacing: 1, display: "inline-block" }}>R <span style={{ fontSize: 10, color: COLORS.magenta, WebkitTextStroke: 0 }}>v2.1</span></div>
-                    <div style={{ fontSize: 11, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: 2 }}>{currentBase.name}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <img src="./logo.png" alt="Logo Logística" style={{ width: 36, height: 36, borderRadius: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.5)" }} />
+                    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                        <div style={{ fontSize: 13, fontWeight: 800, color: "#FFF", letterSpacing: 0.5 }}>Ruta Logística</div>
+                        <div style={{ fontSize: 10, color: COLORS.magenta, textTransform: "uppercase", letterSpacing: 1, marginTop: 1, fontWeight: 700 }}>{currentBase.name}</div>
+                    </div>
                 </div>
                 <div style={{ background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "6px 10px", borderRadius: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}
                     onClick={() => { setScreen("setup"); setVendorName(""); setNameInput(""); }}>

@@ -1,11 +1,10 @@
-const CACHE_NAME = 'logistica-app-v1';
+const CACHE_NAME = 'logistica-app-v2';
 const urlsToCache = [
-  '/app-logistica/',
-  '/app-logistica/index.html',
-  '/app-logistica/app.jsx',
-  '/app-logistica/manifest.json',
-  '/app-logistica/icon-192.png',
-  '/app-logistica/icon-512.png'
+  './',
+  './index.html',
+  './app.jsx',
+  './manifest.json',
+  './logo.png'
 ];
 
 self.addEventListener('install', event => {
@@ -17,15 +16,32 @@ self.addEventListener('install', event => {
   );
 });
 
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('Borrando caché antigua:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
 self.addEventListener('fetch', event => {
+  // Estrategia "Network First" (Primero buscar en internet, si falla, recaer en caché)
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response; // Si está en caché lo devolvemos
-        }
-        return fetch(event.request); // Si no, vamos a la red
-      }
-    )
+    fetch(event.request).then(response => {
+      // Si la red tiene éxito, guardamos un clon de la versión nueva en el caché escondido.
+      const responseClone = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+      return response;
+    }).catch(() => {
+      // Solo si el usuario se queda sin internet (modo rural/avión) entramos a usar el Caché local:
+      return caches.match(event.request);
+    })
   );
 });
