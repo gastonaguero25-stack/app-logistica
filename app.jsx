@@ -67,35 +67,39 @@ function App() {
 
     const [clientLocations, setClientLocations] = useState([]);
     const [providerLocations, setProviderLocations] = useState([]);
+    const [allowedBases, setAllowedBases] = useState([]);
+    const [adminTasks, setAdminTasks] = useState([]);
 
-    useEffect(() => {
-        const fetchMapData = async () => {
-            try {
-                const res = await fetch(`${API_URL}/api/map_data`);
-                const data = await res.json();
-                if (data.estado === "exito") {
-                    setClientLocations(data.clientes.map(c => ({
-                        name: c.Nombre,
-                        lat: parseFloat(c.Latitud),
-                        lng: parseFloat(c.Longitud),
-                        address: c.Direccion || "Sin Dirección",
-                        province: c.Sucursal || "General"
-                    })));
-                    setProviderLocations(data.proveedores.map((p, i) => ({
-                        id: "prov_" + i,
-                        name: p.Nombre,
-                        lat: parseFloat(p.Latitud),
-                        lng: parseFloat(p.Longitud),
-                        address: p.Direccion || "Sin Dirección",
-                        province: "Proveedor"
-                    })));
-                }
-            } catch (e) {
-                console.log("Error map data OTA:", e);
+    const fetchServerData = async (vendName) => {
+        try {
+            const resM = await fetch(`${API_URL}/api/map_data?vendedor=${vendName}`);
+            const dataM = await resM.json();
+            if (dataM.estado === "exito") {
+                setClientLocations(dataM.clientes.map(c => ({
+                    name: c.Nombre || c.Cliente || "Sin Nombre",
+                    lat: parseFloat(c.Latitud || c.Lat),
+                    lng: parseFloat(c.Longitud || c.Long),
+                    address: c.Direccion || "Sin Dirección",
+                    province: c.Sucursal || "General"
+                })));
+                setProviderLocations(dataM.proveedores.map((p, i) => ({
+                    id: "prov_" + i,
+                    name: p.Nombre,
+                    lat: parseFloat(p.Latitud),
+                    lng: parseFloat(p.Longitud),
+                    address: p.Direccion || "Sin Dirección",
+                    province: "Proveedor"
+                })));
             }
-        };
-        fetchMapData();
-    }, []);
+            const resA = await fetch(`${API_URL}/api/admin/data?vendedor=${vendName}`);
+            const dataA = await resA.json();
+            if (dataA.estado === "exito") {
+                setAdminTasks(dataA.datos);
+            }
+        } catch (e) {
+            console.log("Error server data OTA:", e);
+        }
+    };
 
     useEffect(() => {
         try {
@@ -111,16 +115,32 @@ function App() {
 
     const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 2500); };
 
-    const enterApp = (r, enteredName) => {
+    const enterApp = async (r, enteredName) => {
         setRole(r);
-        const inputClean = enteredName.trim().toLowerCase();
-        setVendorName(enteredName.trim());
+        const inputClean = enteredName.trim();
+        setVendorName(inputClean);
 
-        if (inputClean === "leandro") { // Leandro siempre es vendedor y va a La Ruta
-            setCurrentBase(BASES_DISPONIBLES.find(b => b.id === "ruta"));
-            setScreen("main");
-        } else {
-            setScreen("select_base");
+        if (!inputClean) return;
+
+        try {
+            const res = await fetch(`${API_URL}/api/login?vendedor=${inputClean}`);
+            const data = await res.json();
+
+            if (data.estado === "exito") {
+                setAllowedBases(data.sucursales);
+                await fetchServerData(inputClean);
+
+                if (data.sucursales.length === 1) {
+                    setCurrentBase(BASES_DISPONIBLES.find(b => b.id === data.sucursales[0]) || BASES_DISPONIBLES[0]);
+                    setScreen("main");
+                } else {
+                    setScreen("select_base");
+                }
+            } else {
+                showToast(data.mensaje || "Vendedor no registrado. Verifique con administración.");
+            }
+        } catch (e) {
+            showToast("Error de conexión con el Servidor");
         }
     };
 
@@ -292,8 +312,8 @@ function App() {
                 </div>
 
                 {BASES_DISPONIBLES.filter(b => {
-                    // Filtrar 'sanlorenzo' y 'proveedor' de las bases de partida
-                    return b.id !== "sanlorenzo" && b.id !== "proveedor";
+                    // Filtrar dinamicamente segun excel
+                    return allowedBases.includes(b.id);
                 }).map(b => (
                     <div key={b.id} style={C.card({ cursor: "pointer", transition: "0.2s" })} onClick={() => { setCurrentBase(b); setScreen("main"); }}>
                         <div style={{ fontWeight: 800, fontSize: 17, color: "#FFF", marginBottom: 6 }}>🏁 {b.name}</div>
@@ -467,6 +487,20 @@ function App() {
                         </div>
                         <button style={C.btn("rgba(230,0,126,0.15)", COLORS.magenta, { width: "auto", marginTop: 0, border: `1px solid ${COLORS.magenta}`, padding: "8px 16px", borderRadius: 20 })} onClick={addClient}>+ Nuevo</button>
                     </div>
+
+                    {adminTasks.length > 0 && (
+                        <div style={C.card({ background: "rgba(255, 75, 75, 0.1)", border: "1px solid rgba(255,75,75,0.4)", margin: "0 16px 16px 16px", padding: 16 })}>
+                            <div style={{ fontSize: 16, fontWeight: 800, color: "#ff4b4b", marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                                📌 Tareas Administrativas
+                            </div>
+                            {adminTasks.map((t, idx) => (
+                                <div key={idx} style={{ padding: "8px 0", borderBottom: idx < adminTasks.length - 1 ? "1px solid rgba(255,75,75,0.2)" : "none" }}>
+                                    <div style={{ fontWeight: 600, color: "#fff", fontSize: 14 }}>{t[" Tarea a Asignar"] || t["Tarea a Asignar"] || t["Tarea"]}</div>
+                                    <div style={{ fontSize: 13, color: COLORS.textWhite, marginTop: 4 }}>{t[" Comentario."] || t["Comentario."] || t["Comentario"]}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
 
                     {clients.length === 0 && (
                         <div style={C.card({ textAlign: "center", padding: "40px 16px", background: "transparent", border: "1px dashed rgba(255,255,255,0.2)", boxShadow: "none" })}>
