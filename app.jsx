@@ -8,14 +8,6 @@ const BASES_DISPONIBLES = [
     { id: "jisahiper", name: "JISA S.A. (HIPER)", address: "Hiper Libertad, Resistencia, Chaco", lat: -27.4331, lng: -58.9954, color: "#FFF", province: "Chaco" }
 ];
 
-const GAS_STATIONS = [
-    { name: "AXION Paysandú", address: "Av. Paysandú & Cruz del Sud", lat: -27.4995, lng: -58.8255 },
-    { name: "GAS SIFER S.A.", address: "Av. Maipú 801", lat: -27.4860, lng: -58.8232 },
-    { name: "Shell El Puente", address: "Av. 3 de Abril 402", lat: -27.4747, lng: -58.8466 },
-    { name: "YPF Apala SRL", address: "Av. Maipú 1801", lat: -27.4948, lng: -58.8172 },
-    { name: "Shell Yrigoyen", address: "Hipólito Yrigoyen, Perú 2301", lat: -27.4700, lng: -58.8215 },
-];
-
 const RESULTS = [
     { value: "sin_visitar", label: "Sin visitar", emoji: "🔵", color: "#6366f1" },
     { value: "interesado", label: "Interesado", emoji: "✅", color: "#21c354" },
@@ -26,7 +18,7 @@ const RESULTS = [
 // --- API y Constantes ---
 // Forzamos la IP del entorno Servidor (MAC) para que la app (allojada en Github) sepa enviar sus datos a la casa matriz
 const API_URL = "http://192.168.1.14:8000";
-const APP_VERSION = "2.3.2";
+const APP_VERSION = "2.3.3";
 
 // --- Utilidades ---
 const geodist = (lat1, lng1, lat2, lng2) => {
@@ -71,6 +63,39 @@ function App() {
     const [confirmDel, setConfirmDel] = useState(null);
     const [toast, setToast] = useState("");
     const [mapUrl, setMapUrl] = useState(null);
+
+
+    const [clientLocations, setClientLocations] = useState([]);
+    const [providerLocations, setProviderLocations] = useState([]);
+
+    useEffect(() => {
+        const fetchMapData = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/map_data`);
+                const data = await res.json();
+                if (data.estado === "exito") {
+                    setClientLocations(data.clientes.map(c => ({
+                        name: c.Nombre,
+                        lat: parseFloat(c.Latitud),
+                        lng: parseFloat(c.Longitud),
+                        address: c.Direccion || "Sin Dirección",
+                        province: c.Sucursal || "General"
+                    })));
+                    setProviderLocations(data.proveedores.map((p, i) => ({
+                        id: "prov_" + i,
+                        name: p.Nombre,
+                        lat: parseFloat(p.Latitud),
+                        lng: parseFloat(p.Longitud),
+                        address: p.Direccion || "Sin Dirección",
+                        province: "Proveedor"
+                    })));
+                }
+            } catch (e) {
+                console.log("Error map data OTA:", e);
+            }
+        };
+        fetchMapData();
+    }, []);
 
     useEffect(() => {
         try {
@@ -277,7 +302,7 @@ function App() {
                 ))}
 
                 <button style={C.btn("transparent", COLORS.textWhite, { marginTop: 24, border: "1px solid rgba(255,255,255,0.2)" })}
-                    onClick={() => setScreen("setup")}>
+                    onClick={() => window.close() || (window.location.href = "about:blank")}>
                     🔙 Volver
                 </button>
             </div>
@@ -324,8 +349,17 @@ function App() {
                             </div>
                         ))}
 
-                        <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>DEST. CORRIENTES:</div>
-                        {GAS_STATIONS.filter(g => g.province === "Corrientes").map((g, idx) => (
+                        <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>PROVEEDORES:</div>
+                        {providerLocations.map((p, idx) => (
+                            <div key={"p" + idx} style={{ background: "rgba(255,255,255,0.05)", padding: "10px 8px", borderRadius: 8, cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)", transition: "0.2s" }}
+                                onClick={() => openMapsRoute(currentBase.lat, currentBase.lng, p.lat, p.lng, setMapUrl)}>
+                                <div style={{ fontSize: 12, fontWeight: 700, color: "#FFF", marginBottom: 2 }}>{p.name.slice(0, 16)}{p.name.length > 16 ? "..." : ""}</div>
+                                <div style={{ fontSize: 10, color: COLORS.magenta, fontWeight: 700 }}>{geodist(currentBase.lat, currentBase.lng, p.lat, p.lng).toFixed(1)} km</div>
+                            </div>
+                        ))}
+
+                        <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>CLIENTES UBICACIONES:</div>
+                        {clientLocations.map((g, idx) => (
                             <div key={idx} style={{ background: "rgba(255,255,255,0.05)", padding: "10px 8px", borderRadius: 8, cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)", transition: "0.2s" }}
                                 onClick={() => openMapsRoute(currentBase.lat, currentBase.lng, g.lat, g.lng, setMapUrl)}>
                                 <div style={{ fontSize: 12, fontWeight: 700, color: "#FFF", marginBottom: 2 }}>{g.name.slice(0, 16)}{g.name.length > 16 ? "..." : ""}</div>
@@ -333,14 +367,8 @@ function App() {
                             </div>
                         ))}
 
-                        <div style={{ fontSize: 11, color: COLORS.magenta, fontWeight: 800, marginTop: 10, letterSpacing: 0.5 }}>DEST. CHACO:</div>
-                        {GAS_STATIONS.filter(g => g.province === "Chaco").map((g, idx) => (
-                            <div key={idx} style={{ background: "rgba(255,255,255,0.05)", padding: "10px 8px", borderRadius: 8, cursor: "pointer", border: "1px solid rgba(255,255,255,0.05)", transition: "0.2s" }}
-                                onClick={() => openMapsRoute(currentBase.lat, currentBase.lng, g.lat, g.lng, setMapUrl)}>
-                                <div style={{ fontSize: 12, fontWeight: 700, color: "#FFF", marginBottom: 2 }}>{g.name.slice(0, 16)}{g.name.length > 16 ? "..." : ""}</div>
-                                <div style={{ fontSize: 10, color: COLORS.magenta, fontWeight: 700 }}>{geodist(currentBase.lat, currentBase.lng, g.lat, g.lng).toFixed(1)} km</div>
-                            </div>
-                        ))}
+
+
                     </div>
 
                     {/* TOGGLE BUTTON */}
@@ -652,11 +680,11 @@ function App() {
 
                     <div style={C.card()}>
                         <div style={{ fontSize: 16, fontWeight: 800, color: COLORS.textWhite, marginBottom: 16 }}>Destinos Frecuentes</div>
-                        {GAS_STATIONS.map((g, i) => {
+                        {clientLocations.map((g, i) => {
                             const d = geodist(currentBase.lat, currentBase.lng, g.lat, g.lng);
                             const isCompetitor = !g.name.includes("AXION") && !g.name.includes("GAS");
                             return (
-                                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: i < GAS_STATIONS.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
+                                <div key={i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 0", borderBottom: i < clientLocations.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none" }}>
                                     <div style={{ flex: 1, paddingRight: 10 }}>
                                         <div style={{ fontSize: 14, fontWeight: 600, color: isCompetitor ? "#ff4b4b" : "#FFF", display: "flex", alignItems: "center", gap: 8 }}>
                                             ⛽ {g.name}
