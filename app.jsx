@@ -18,7 +18,7 @@ const RESULTS = [
 // --- API y Constantes ---
 // Forzamos la IP del entorno Servidor (MAC) para que la app (allojada en Github) sepa enviar sus datos a la casa matriz
 const API_URL = "http://192.168.1.14:8000";
-const APP_VERSION = "2.3.3";
+const APP_VERSION = "2.3.4";
 
 // --- Utilidades ---
 const geodist = (lat1, lng1, lat2, lng2) => {
@@ -272,6 +272,9 @@ function App() {
 
     if (screen === "setup") return (
         <div style={C.app}>
+            <style>{`
+                .btn-pulse:active { transform: scale(0.95); opacity: 0.8 !important; transition: 0.1s ease !important; }
+            `}</style>
             {/* Versión en la esquina inferior izquierda */}
             <div style={{ position: "fixed", bottom: 16, left: 16, fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: "bold" }}>v{APP_VERSION}</div>
 
@@ -291,6 +294,7 @@ function App() {
                         onChange={e => setNameInput(e.target.value)}
                     />
                     <button
+                        className="btn-pulse"
                         style={C.btn(COLORS.magenta, COLORS.textWhite, { opacity: nameInput.trim() ? 1 : 0.4, marginTop: 16 })}
                         disabled={!nameInput.trim()}
                         onClick={() => { enterApp("vendedor", nameInput); }}
